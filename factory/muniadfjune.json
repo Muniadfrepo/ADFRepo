@@ -1,0 +1,9 @@
+{
+	"name": "muniadfjune",
+	"location": "centralindia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "5db07366-5ace-4dbd-b6a2-8dd57e106cab",
+		"tenantId": "d8cc6c97-bd27-4c5e-aed5-44ea2d9d58d3"
+	}
+}

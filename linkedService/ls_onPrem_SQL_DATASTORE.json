@@ -1,0 +1,21 @@
+{
+	"name": "ls_onPrem_SQL_DATASTORE",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "SqlServer",
+		"typeProperties": {
+			"server": "DESKTOP-LOG8P0E",
+			"database": "DATASTORE",
+			"encrypt": "optional",
+			"trustServerCertificate": false,
+			"authenticationType": "Windows",
+			"userName": "Admin",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiJiMmJhNWQzZS0yM2VhLTRhMzUtYjMyOS0zNjE5NDc0YTcxMTkiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "SelfHostedIR",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

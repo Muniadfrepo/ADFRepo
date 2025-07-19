@@ -1,0 +1,32 @@
+{
+	"name": "batch_process",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "pl_incremental_load_for_multiple_tables_schedule",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2025-07-07T14:07:00",
+				"timeZone": "India Standard Time",
+				"schedule": {
+					"minutes": [
+						44
+					],
+					"hours": [
+						19
+					]
+				}
+			}
+		}
+	}
+}

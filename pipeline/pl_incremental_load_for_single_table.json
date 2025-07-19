@@ -1,0 +1,175 @@
+{
+	"name": "pl_incremental_load_for_single_table",
+	"properties": {
+		"activities": [
+			{
+				"name": "WMD_Start",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "SELECT last_loaded_date as WMD_Start from control_tbl\nWHERE table_name='customer'",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "ds_azSQL_TARGET",
+						"type": "DatasetReference",
+						"parameters": {
+							"p_table_name": "customer"
+						}
+					}
+				}
+			},
+			{
+				"name": "WMD_End",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource",
+						"sqlReaderQuery": "SELECT MAX(created_at) as WMD_End FROM customer",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "ds_onPrem_DATASTORE",
+						"type": "DatasetReference",
+						"parameters": {
+							"p_table_name": "customer"
+						}
+					}
+				}
+			},
+			{
+				"name": "Copy Load Data",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "WMD_Start",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "WMD_End",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource",
+						"sqlReaderQuery": {
+							"value": "SELECT * FROM customer\nWHERE created_at>'@{activity('WMD_Start').output.firstRow.WMD_Start}' AND created_at<='@{activity('WMD_End').output.firstRow.WMD_End}'",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_onPrem_DATASTORE",
+						"type": "DatasetReference",
+						"parameters": {
+							"p_table_name": "customer"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_azSQL_TARGET",
+						"type": "DatasetReference",
+						"parameters": {
+							"p_table_name": "customer"
+						}
+					}
+				]
+			},
+			{
+				"name": "ups_update_control_table",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Copy Load Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[ups_update_control_table]",
+					"storedProcedureParameters": {
+						"last_loaded_date": {
+							"value": {
+								"value": "@activity('WMD_End').output.firstRow.WMD_End",
+								"type": "Expression"
+							},
+							"type": "Datetime"
+						},
+						"table_nmae": {
+							"value": "customer",
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "ls_azSQL_TARGET",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2025-07-04T02:16:08Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
